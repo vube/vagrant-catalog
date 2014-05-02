@@ -19,10 +19,6 @@ try
 	$catalog->init();
 	$result = $catalog->exec();
 
-	header('Content-Type: text/plain');
-	var_export($catalog);
-	exit;
-
 	foreach($result['headers'] as $header)
 		header($header);
 
