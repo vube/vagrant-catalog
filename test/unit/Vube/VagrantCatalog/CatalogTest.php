@@ -146,12 +146,28 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		$this->assertTrue(is_array($config), "loaded config is array");
 	}
 
-	public function testTemplateParse()
+	public function testTemplateParseDocroot()
 	{
-		$template = '{"url":"{{download_url_prefix}}/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
 		$expected = '{"url":"http://download.dev/files/filename.box"}';
 
 		$catalog = $this->constructCatalog();
+		$catalog->loadConfig();
+
+		$result = $catalog->parseMetadataTemplate($template);
+
+		$this->assertSame($expected, $result);
+	}
+
+	public function testTemplateParseSubdirPathInfo()
+	{
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
+		$expected = '{"url":"http://download.dev/files/foo/filename.box"}';
+
+		$catalog = $this->constructCatalog("/base", array(
+			'REQUEST_URI' => "/base/foo",
+			'SCRIPT_NAME' => "/base/index.php",
+		));
 		$catalog->loadConfig();
 
 		$result = $catalog->parseMetadataTemplate($template);

@@ -160,7 +160,10 @@ class Catalog {
 
 	public function parseMetadataTemplate($template)
 	{
-		$parse = preg_replace("/\{\{download_url_prefix\}\}/", $this->config['download-url-prefix'], $template);
+		$parse = $template;
+
+		$parse = preg_replace("/\{\{download_url_prefix\}\}/", $this->config['download-url-prefix'], $parse);
+		$parse = preg_replace("/\{\{path_info\}\}/", $this->pathInfo, $parse);
 
 		return $parse;
 	}

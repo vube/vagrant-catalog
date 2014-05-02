@@ -10,7 +10,32 @@
 
 return array(
 
+    /**
+     * Path to the root of the metadata.json file
+     *
+     * If this is not an absolute directory, it is relative to the
+     * current directory.
+     */
     'metadata-root' => 'metadata',
 
+    /**
+     * Download Url Prefix
+     *
+     * The http/path location where to find the download box files.
+     * This is only used if the metadata.json files use the
+     * {{download_url_prefix}} template variable.
+     *
+     * You should not include a trailing "/" after this value.
+     *
+     * For example they may specify a version like this:
+     *
+     * "versions" => [{
+     *   "version" => "1.1.0",
+     *   "providers" => [{
+     *     "name": "virtualbox",
+     *     "url": "{{download_url_prefix}}{{path_info}}\/foo-1.1.0-virtualbox.box",
+     *   }]
+     * }]
+     */
     'download-url-prefix' => 'http://download.dev/files',
 );
