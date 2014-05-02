@@ -1,0 +1,27 @@
+{
+	"name": "vube/vagrant-catalog",
+	"type": "project",
+	"description": "Vagrant Cloud-like catalog for use on your private network",
+	"keywords": ["vube", "vagrant", "vagrant catalog"],
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Ross Perkins",
+			"email": "ross@vubeology.com",
+			"homepage": "http://code.vube.com/",
+			"role": "Lead"
+		}
+	],
+    "require": {
+	    "php": ">=5.3.2"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "4.0.*@stable",
+		"mikey179/vfsStream": "~1.2.0",
+		"satooshi/php-coveralls": "dev-master"
+	},
+	"minimum-stability": "dev",
+	"autoload": {
+		"psr-0": {"Vube\\VagrantCatalog\\": "src/"}
+	}
+}

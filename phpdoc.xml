@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdoc>
+	<title><![CDATA[vube/vagrant-catalog]]></title>
+	<parser>
+		<target>build/phpdoc</target>
+		<markers>
+			<item>TODO</item>
+			<item>FIXME</item>
+			<item>NOTE</item>
+		</markers>
+	</parser>
+	<transformer>
+		<target>build/phpdoc</target>
+	</transformer>
+	<transformations>
+		<template name="responsive" />
+	</transformations>
+	<files>
+		<directory>src</directory>
+	</files>
+	<plugins>
+		<plugin path="Core">
+			<option name="required">
+				<tag name="return">
+					<element>phpDocumentor\Reflection\Class\MethodReflector</element>
+					<element>phpDocumentor\Reflection\FunctionReflector</element>
+				</tag>
+			</option>
+		</plugin>
+	</plugins>
+	<logging>
+		<level>warn</level>
+		<paths>
+			<default>build/default.log</default>
+			<errors>build/errors.log</errors>
+		</paths>
+	</logging>
+</phpdoc>

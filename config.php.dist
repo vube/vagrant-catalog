@@ -1,0 +1,16 @@
+<?php
+/**
+ * config.php
+ *
+ * Copy this file to config.php in this directory, change the settings
+ * to match your environment.
+ *
+ * @author Ross Perkins <ross@vubeology.com>
+ */
+
+return array(
+
+    'metadata-root' => 'metadata',
+
+    'download-url-prefix' => 'http://download.dev/files',
+);

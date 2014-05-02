@@ -1,0 +1,5 @@
+<LIMIT GET HEAD>
+    # Redirect _everything_ under this URI to index.php
+    RewriteEngine On
+    RewriteRule ^.*$ index.php [L,QSA]
+</LIMIT>

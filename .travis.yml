@@ -1,0 +1,21 @@
+# .travis.yml
+
+language: php
+php:
+  - 5.3
+  - 5.4
+  - 5.5
+
+# Install dependencies before testing
+before_script:
+  - composer selfupdate
+  - composer install --dev
+
+# Use our custom version of phpunit
+script:
+  - mkdir -p build/logs
+  - php vendor/bin/phpunit
+
+# Run coveralls.io code coverage report
+after_script:
+  - php vendor/bin/coveralls -v
