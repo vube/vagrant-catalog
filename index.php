@@ -22,7 +22,8 @@ try
 	foreach($result['headers'] as $header)
 		header($header);
 
-	echo $result['content'];
+	if($_SERVER['REQUEST_METHOD'] !== 'HEAD')
+		echo $result['content'];
 }
 catch(\Vube\VagrantCatalog\Exception\HttpException $e)
 {
