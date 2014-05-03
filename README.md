@@ -25,12 +25,23 @@ To install, clone this repository and put it wherever you want it to live on
 your machine.
 
 ```bash
+$ cd /path/to/docroot
 $ git clone https://github.com/vube/vagrant-catalog
+$ composer update
+```
+
+Configuration
+-------------
+
+```bash
+$ cd /path/to/docroot/vagrant-catalog
+$ cp config.php.dist config.php
+$ edit config.php
 ```
 
 
 Dependencies
 ------------
 
-- PHP 5.3.2+
+- PHP 5.3.7+
 - Composer
