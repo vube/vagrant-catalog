@@ -25,13 +25,11 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		if(empty($u['path'])) $u['path'] = '/';
 		if(empty($u['port'])) $u['port'] = $defaultPort;
 
-		$http_host = $u['scheme'].'://'.$u['host'].($u['port'] == $defaultPort ? '' : ':'.$u['port']);
+		$http_host = $u['host'].($u['port'] == $defaultPort ? '' : ':'.$u['port']);
 		$query = empty($u['query']) ? '' : '?'.$u['query'];
 
 		$server = array(
 			'HTTP_HOST' => $http_host,
-			'SCRIPT_URI' => $http_host . $u['path'],
-			'SCRIPT_URL' => $u['path'],
 			'REQUEST_URI' => $u['path'] . $query,
 			'SCRIPT_NAME' => $basePath . '/index.php',
 		);

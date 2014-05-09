@@ -75,17 +75,14 @@ class Catalog {
 		// This part can be kind of confusing unless you know exactly what $_SERVER
 		// contains.  Here is an example:
 		//
-		// SCRIPT_URI  = "http://host.com:8080/base/path/info"
-		// SCRIPT_URL  = "/base/path/info"
+		// HTTP_HOST   = "host.com:8080"
 		// SCRIPT_NAME = "/base/index.php"
 		//
 		// scriptRelativeDir: "/base" (calculated above)
 		// baseUri: "http://host.com:8080/base"
 
-		$scriptUriLen = strlen($_SERVER['SCRIPT_URI']);
-		$scriptUrlLen = strlen($_SERVER['SCRIPT_URL']);
-
-		$httpHostPort = substr($_SERVER['SCRIPT_URI'], 0, $scriptUriLen-$scriptUrlLen);
+		$protocol = 'http' . (empty($_SERVER['HTTPS']) ? '' : 's');
+		$httpHostPort = $protocol . '://' . $_SERVER['HTTP_HOST'];
 		$this->baseUri = $httpHostPort . $this->scriptRelativeDir;
 	}
 
