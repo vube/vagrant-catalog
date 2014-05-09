@@ -10,7 +10,7 @@
 <h3>Boxes</h3>
 <ul>
 {foreach $boxes as $file}
-    <li><a href="{$CATALOG_URI|escape}{$pathInfo|escape}/{$file|escape}">{$relativePathInfo|escape}{if $relativePathInfo ne ''}/{/if}{$file|escape}</a></li>
+    <li>{$relativePathInfo|escape}{if $relativePathInfo ne ''}/{/if}{$file|escape} -- <a href="{$CATALOG_URI|escape}{$pathInfo|escape}/{$file|escape}">{$CATALOG_URI|escape}{$pathInfo|escape}/{$file|escape}</a></li>
 {/foreach}
 {/if}
 </ul>

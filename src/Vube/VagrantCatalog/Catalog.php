@@ -289,8 +289,8 @@ class Catalog {
 
 		$smarty = new Smarty($this->baseDir);
 
-		$smarty->assign('BASE_URI', $this->scriptRelativeDir);
-		$smarty->assign('CATALOG_URI', $this->scriptRelativeDir.'/'.$this->config['catalog-uri']);
+		$smarty->assign('BASE_URI', $this->baseUri);
+		$smarty->assign('CATALOG_URI', $this->baseUri.'/'.$this->config['catalog-uri']);
 
 		$smarty->assign('pathInfo', $this->pathInfo);
 		// pathInfo with no leading slash (possibly empty string)
