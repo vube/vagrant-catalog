@@ -284,6 +284,8 @@ class Catalog {
 		$smarty->assign('CATALOG_URI', $this->scriptRelativeDir.'/'.$this->config['catalog-uri']);
 
 		$smarty->assign('pathInfo', $this->pathInfo);
+		// pathInfo with no leading slash (possibly empty string)
+		$smarty->assign('relativePathInfo', preg_replace('%^/+%', '', $this->pathInfo));
 
 		$scanner = new DirectoryScan($currentDir);
 		$dirInfo = $scanner->scan();

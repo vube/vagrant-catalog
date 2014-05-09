@@ -4,14 +4,16 @@
 </head>
 <body>
 <h1>Vagrant Catalog</h1>
-<h2>{$pathInfo|escape}</h2>
+<h2>{$relativePathInfo|escape}</h2>
 
 {if $boxes|@count gt 0}
 <h3>Boxes</h3>
+<ul>
 {foreach $boxes as $file}
-    <li><a href="{$CATALOG_URI|escape}{$pathInfo|escape}">{$pathInfo|escape}</a></li>
+    <li><a href="{$CATALOG_URI|escape}{$pathInfo|escape}/{$file|escape}">{$relativePathInfo|escape}{if $relativePathInfo ne ''}/{/if}{$file|escape}</a></li>
 {/foreach}
 {/if}
+</ul>
 
 {if $directories|@count gt 0}
 <h3>Sub-directories</h3>
