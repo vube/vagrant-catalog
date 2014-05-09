@@ -17,13 +17,30 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	private $root;
 
+	public static function parseUrlIntoServerArgs($url, $basePath='')
+	{
+		$u = parse_url($url);
+
+		$defaultPort = ($u['scheme'] == 'https' ? 443 : 80);
+		if(empty($u['path'])) $u['path'] = '/';
+		if(empty($u['port'])) $u['port'] = $defaultPort;
+
+		$http_host = $u['scheme'].'://'.$u['host'].($u['port'] == $defaultPort ? '' : ':'.$u['port']);
+		$query = empty($u['query']) ? '' : '?'.$u['query'];
+
+		$server = array(
+			'HTTP_HOST' => $http_host,
+			'SCRIPT_URI' => $http_host . $u['path'],
+			'SCRIPT_URL' => $u['path'],
+			'REQUEST_URI' => $u['path'] . $query,
+			'SCRIPT_NAME' => $basePath . '/index.php',
+		);
+		return $server;
+	}
+
 	public static function setUpBeforeClass()
 	{
-		self::$defaultServerSettings = array(
-			'HTTP_HOST' => 'http://localhost',
-			'REQUEST_URI' => '/',
-			'SCRIPT_NAME' => '/index.php',
-		);
+		self::$defaultServerSettings = self::parseUrlIntoServerArgs('http://localhost');
 
 		self::$configPhpSource = file_get_contents($GLOBALS['PHPUNIT_FIXTURES_DIR']."/config.php");
 	}
@@ -52,14 +69,16 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		));
 	}
 
-	public function constructCatalog($subdir='/', $SERVER=array())
+	public function constructCatalog($url='http://localhost/', $basePath='/')
 	{
-		if($subdir === '/')
-			$subdir = '';
+		$server = self::parseUrlIntoServerArgs($url, $basePath);
 
-		$_SERVER = array_merge(self::$defaultServerSettings, $SERVER);
+		$_SERVER = array_merge(self::$defaultServerSettings, $server);
 
-		$catalog = new Catalog(vfsStream::url("root/docroot$subdir"));
+		// Remove trailing slashes, if any, from basePath
+		$basePath = preg_replace("%/+$%", "", $basePath);
+
+		$catalog = new Catalog(vfsStream::url("root/docroot$basePath"));
 		return $catalog;
 	}
 
@@ -77,9 +96,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 	{
 		$expected = '/foo';
 
-		$catalog = $this->constructCatalog("/", array(
-			'REQUEST_URI' => $expected,
-		));
+		$catalog = $this->constructCatalog("http://localhost/foo");
 		$pathinfo = $catalog->computePathInfo();
 
 		$this->assertSame($expected, $pathinfo);
@@ -89,10 +106,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 	{
 		$expected = '';
 
-		$catalog = $this->constructCatalog("/base", array(
-			'REQUEST_URI' => "/base",
-			'SCRIPT_NAME' => "/base/index.php",
-		));
+		$catalog = $this->constructCatalog("http://localhost/base/", "/base");
 		$pathinfo = $catalog->computePathInfo();
 
 		$this->assertSame($expected, $pathinfo);
@@ -102,10 +116,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 	{
 		$expected = '/foo';
 
-		$catalog = $this->constructCatalog("/base", array(
-			'REQUEST_URI' => "/base$expected",
-			'SCRIPT_NAME' => "/base/index.php",
-		));
+		$catalog = $this->constructCatalog("http://localhost/base$expected", "/base");
 		$pathinfo = $catalog->computePathInfo();
 
 		$this->assertSame($expected, $pathinfo);
@@ -164,11 +175,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
 		$expected = '{"url":"http://download.dev/files/foo/filename.box"}';
 
-		$catalog = $this->constructCatalog("/base", array(
-			'REQUEST_URI' => "/base/foo",
-			'SCRIPT_NAME' => "/base/index.php",
-		));
-		$catalog->loadConfig();
+		$catalog = $this->constructCatalog("http://localhost/base/foo", "/base");
+		$catalog->init();
 
 		$result = $catalog->parseMetadataTemplate($template);
 
@@ -179,7 +187,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 	{
 		$expected = @file_get_contents(vfsStream::url('root/docroot/metadata/metadata.json'));
 
-		$catalog = $this->constructCatalog();
+		$catalog = $this->constructCatalog("http://localhost/catalog/");
 		$catalog->init();
 		$result = $catalog->exec();
 
@@ -191,9 +199,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		$pathinfo = "/foo";
 		$expected = @file_get_contents(vfsStream::url("root/docroot/metadata$pathinfo/metadata.json"));
 
-		$catalog = $this->constructCatalog("/", array(
-			'REQUEST_URI' => $pathinfo,
-		));
+		$catalog = $this->constructCatalog("http://localhost/catalog/foo");
 		$catalog->init();
 		$result = $catalog->exec();
 
@@ -204,10 +210,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 	{
 		$expected = @file_get_contents(vfsStream::url('root/docroot/base/metadata/metadata.json'));
 
-		$catalog = $this->constructCatalog("/base", array(
-			'REQUEST_URI' => "/base",
-			'SCRIPT_NAME' => "/base/index.php",
-		));
+		$catalog = $this->constructCatalog("http://localhost/base/catalog", "/base");
 		$catalog->init();
 		$result = $catalog->exec();
 
@@ -218,10 +221,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 	{
 		$expected = @file_get_contents(vfsStream::url('root/docroot/base/metadata/foo/metadata.json'));
 
-		$catalog = $this->constructCatalog("/base", array(
-			'REQUEST_URI' => "/base/foo",
-			'SCRIPT_NAME' => "/base/index.php",
-		));
+		$catalog = $this->constructCatalog("http://localhost/base/catalog/foo", "/base");
 		$catalog->init();
 		$result = $catalog->exec();
 

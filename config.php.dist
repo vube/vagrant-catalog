@@ -11,21 +11,25 @@
 return array(
 
     /**
-     * Path to the root of the metadata.json file
+     * Filesystem path to the root directory of metadata and (possibly) box files
      *
      * If this is not an absolute directory, it is relative to the
      * current directory.
      */
-    'metadata-root' => 'metadata',
+    'metadata-root' => 'files',
 
     /**
-     * Download Url Prefix
-     *
      * The http/path location where to find the download box files.
+     *
+     * If you do not include a leading "(file|ftp|http|https)://" in the URL then
+     * the base URI of the current application will be used as a default, so the
+     * files will be served by the web server out of the files sub-directory.
+     *
+     * In the default example where metadata-root="files", we specify here the
+     * relative value "files" which maps to the same directory as metadata-root.
+     *
      * This is only used if the metadata.json files use the
      * {{download_url_prefix}} template variable.
-     *
-     * You should not include a trailing "/" after this value.
      *
      * For example they may specify a version like this:
      *
@@ -37,5 +41,7 @@ return array(
      *   }]
      * }]
      */
-    'download-url-prefix' => 'http://download.dev/files',
+    'download-url-prefix' => 'files',
+
+    'catalog-uri' => 'catalog',
 );

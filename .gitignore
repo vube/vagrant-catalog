@@ -1,5 +1,6 @@
 /.idea
 /build
 /composer.lock
-/vendor
 /config.php
+/files
+/vendor

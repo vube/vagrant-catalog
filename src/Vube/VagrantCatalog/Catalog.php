@@ -18,33 +18,37 @@ use Vube\VagrantCatalog\Exception\HttpException;
 class Catalog {
 
 	const CONFIG_PHP = 'config.php';
+	const DEFAULT_CATALOG_URI = 'catalog';
+
+	const ROUTE_INDEX = 'index';
+	const ROUTE_CATALOG = 'catalog';
+	const ROUTE_DEBUG = 'debug';
+
+	private $route = self::ROUTE_INDEX;
+	private $routeList = array();
 
 	private $baseDir;
+	private $baseUri;
+
 	private $scriptRelativeDir = '';
 	private $pathInfo = '';
-	private $configFilename;
 
+	private $configFilename;
 	private $config;
 	private $requiredConfigItems;
+
 	private $triggerErrors = true;
 
 	public function __construct($baseDir)
 	{
 		$this->baseDir = $baseDir;
-		$this->scriptRelativeDir = dirname($_SERVER['SCRIPT_NAME']);
-
-		// In the docroot we don't want a leading slash.
-		// In sub-dirs there won't be a trailing slash, but the docroot
-		// is a bit special in that it DOES have a trailing slash.
-		if($this->scriptRelativeDir === '/')
-			$this->scriptRelativeDir = '';
 
 		$this->requiredConfigItems = array(
 			'metadata-root',
 			'download-url-prefix',
 		);
 
-		$this->pathInfo = $this->computePathInfo();
+		$this->initServerInfo();
 	}
 
 	public function ignoreErrors()
@@ -56,6 +60,33 @@ class Catalog {
 	{
 		if($this->triggerErrors)
 			trigger_error($msg, $type);
+	}
+
+	public function initServerInfo()
+	{
+		$this->scriptRelativeDir = dirname($_SERVER['SCRIPT_NAME']);
+
+		// In the docroot we don't want a leading slash.
+		// In sub-dirs there won't be a trailing slash, but the docroot
+		// is a bit special in that it DOES have a trailing slash.
+		if($this->scriptRelativeDir === '/')
+			$this->scriptRelativeDir = '';
+
+		// This part can be kind of confusing unless you know exactly what $_SERVER
+		// contains.  Here is an example:
+		//
+		// SCRIPT_URI  = "http://host.com:8080/base/path/info"
+		// SCRIPT_URL  = "/base/path/info"
+		// SCRIPT_NAME = "/base/index.php"
+		//
+		// scriptRelativeDir: "/base" (calculated above)
+		// baseUri: "http://host.com:8080/base"
+
+		$scriptUriLen = strlen($_SERVER['SCRIPT_URI']);
+		$scriptUrlLen = strlen($_SERVER['SCRIPT_URL']);
+
+		$httpHostPort = substr($_SERVER['SCRIPT_URI'], 0, $scriptUriLen-$scriptUrlLen);
+		$this->baseUri = $httpHostPort . $this->scriptRelativeDir;
 	}
 
 	public function getConfigFilename()
@@ -83,15 +114,9 @@ class Catalog {
 			}
 			else throw new InvalidInputException("Conflicting values for SCRIPT_NAME and REQUEST_URI");
 		}
-		else
-		{
-			// There is no relative script dir, we're in the docroot
-			// The entire path (if any) is path info
 
-			// If this is a request for the docroot itself, there is NO path info
-			if($path === '/')
-				$path = "";
-		}
+		// Remove any trailing slashes from the path info
+		$path = preg_replace("%/+$%", "", $path);
 
 		return $path;
 	}
@@ -142,9 +167,33 @@ class Catalog {
 		if(substr($this->config['metadata-root'],0,1) !== '/')
 			$this->config['metadata-root'] = $this->baseDir . DIRECTORY_SEPARATOR . $this->config['metadata-root'];
 
+		// Remove any trailing slashes from the metadata root dir
+		$this->config['metadata-root'] = preg_replace("%/+$%", "", $this->config['metadata-root']);
+
 		// If metadata-root directory doesn't exist, throw exception
 		if(! is_dir($this->config['metadata-root']))
 			throw new ConfigException("No such config[metadata-root] directory: ".$this->config['metadata-root']);
+
+		// If they did not specify a proto:// in front of the download-url-prefix, then it
+		// must be relative to the current base uri
+		if(! preg_match("%^(file|ftp|https?)://%i", $this->config['download-url-prefix']))
+		{
+			$slash = substr($this->config['download-url-prefix'], 0, 1) === '/' ? '' : '/';
+			$this->config['download-url-prefix'] = $this->baseUri . $slash . $this->config['download-url-prefix'];
+		}
+
+		// Remove any trailing slashes from the download-url-prefix
+		$this->config['download-url-prefix'] = preg_replace("%/+$%", "", $this->config['download-url-prefix']);
+
+		// Set the default catalog-uri if needed
+		if(! isset($this->config['catalog-uri']))
+			$this->config['catalog-uri'] = self::DEFAULT_CATALOG_URI;
+		else
+		{
+			// They configured the catalog-uri, remove any leading or trailing slashes
+			// from the configured value, in case there are any.
+			$this->config['catalog-uri'] = preg_replace("%(^/+|/+$)%", "", $this->config['catalog-uri']);
+		}
 	}
 
 	public function getConfig()
@@ -152,10 +201,46 @@ class Catalog {
 		return $this->config;
 	}
 
+	public function buildRoutes()
+	{
+		return array(
+			$this->config['catalog-uri'] => self::ROUTE_CATALOG,
+		);
+	}
+
+	public function initRoute()
+	{
+		$this->routeList = $this->buildRoutes();
+
+		// By default pathInfo is everything after the script
+		$this->pathInfo = $this->computePathInfo();
+
+		foreach($this->routeList as $uri => $routeType)
+		{
+			$len = strlen($uri);
+
+			// If pathInfo is like "/$uri/*"
+			if(substr($this->pathInfo, 0, $len+2) === '/'.$uri.'/' ||
+				//  or if path info is "/$uri"
+				(substr($this->pathInfo, 0, $len+1) === '/'.$uri && strlen($this->pathInfo) === $len+1))
+			{
+				// We matched a route
+				// Set the route type
+				// Remove the route uri from the pathInfo
+
+				$this->route = $routeType;
+				$this->pathInfo = substr($this->pathInfo, $len+1);
+				return;
+			}
+		}
+	}
+
 	public function init()
 	{
 		$this->loadConfig();
 		$this->checkConfig();
+
+		$this->initRoute();
 	}
 
 	public function parseMetadataTemplate($template)
@@ -168,14 +253,14 @@ class Catalog {
 		return $parse;
 	}
 
-	public function exec()
+	public function execCatalogRoute()
 	{
 		$metadataPath = $this->pathInfo . DIRECTORY_SEPARATOR . 'metadata.json';
 
 		$metadataFile = $this->config['metadata-root'] . $metadataPath;
 
 		if(! file_exists($metadataFile))
-			throw new HttpException("File not found: $metadataPath", 404);
+			throw new HttpException("No such file: $metadataFile", 404);
 
 		$template = @file_get_contents($metadataFile);
 		$metadata = $this->parseMetadataTemplate($template);
@@ -186,6 +271,62 @@ class Catalog {
 			),
 			'content' => $metadata,
 		);
+		return $result;
+	}
+
+	public function execIndexRoute()
+	{
+		$currentDir = $this->config['metadata-root'] . $this->pathInfo;
+
+		$smarty = new Smarty($this->baseDir);
+
+		$smarty->assign('BASE_URI', $this->scriptRelativeDir);
+		$smarty->assign('CATALOG_URI', $this->scriptRelativeDir.'/'.$this->config['catalog-uri']);
+
+		$smarty->assign('pathInfo', $this->pathInfo);
+
+		$scanner = new DirectoryScan($currentDir);
+		$dirInfo = $scanner->scan();
+
+		$smarty->assign('directories', $dirInfo['dirs']);
+		$smarty->assign('boxes', $dirInfo['boxes']);
+
+		$result = array(
+			'headers' => array(
+				'Content-Type: text/html',
+			),
+			'content' => $smarty->fetch('index.tpl'),
+		);
+		return $result;
+	}
+
+	public function exec()
+	{
+		switch($this->route)
+		{
+			case self::ROUTE_CATALOG:
+				$result = $this->execCatalogRoute();
+				break;
+
+			case self::ROUTE_INDEX:
+				$result = $this->execIndexRoute();
+				break;
+
+			case self::ROUTE_DEBUG:
+				$result = array(
+					'headers' => array('Content-Type: text/plain'),
+					'content' => "DEBUG OUTPUT" .
+						"\n\n".
+						var_export($this, true) .
+						"\n\n" .
+						var_export($_SERVER, true),
+				);
+				break;
+
+			default:
+				throw new Exception("No such route: ".$this->route);
+		}
+
 		return $result;
 	}
 }
