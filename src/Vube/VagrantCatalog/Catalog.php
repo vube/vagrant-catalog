@@ -154,6 +154,17 @@ class Catalog {
 		}
 	}
 
+	/**
+	 * Set a config option (used by tests)
+	 *
+	 * @param string $n Config key
+	 * @param string $v Value of the config
+	 */
+	public function setConfig($n, $v)
+	{
+		$this->config[$n] = $v;
+	}
+
 	public function checkConfig()
 	{
 		// Check to make sure all the required items exist

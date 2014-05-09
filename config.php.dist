@@ -43,5 +43,11 @@ return array(
      */
     'download-url-prefix' => 'files',
 
+    /**
+     * Base URI to where catalog metadata files are served from
+     *
+     * This is a virtual URL under the current directory.  It should NOT
+     * be a full URL, it should just be a path.
+     */
     'catalog-uri' => 'catalog',
 );

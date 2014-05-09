@@ -128,6 +128,7 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 		$catalog = $this->constructCatalog();
 		$config = $catalog->loadConfig();
+		$catalog->checkConfig();
 		$configFilename = $catalog->getConfigFilename();
 
 		$this->assertSame($expectedFile, $configFilename);
@@ -164,6 +165,25 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 		$catalog = $this->constructCatalog();
 		$catalog->loadConfig();
+		$catalog->checkConfig();
+
+		$result = $catalog->parseMetadataTemplate($template);
+
+		$this->assertSame($expected, $result);
+	}
+
+	public function testTemplateParseDocrootWithRelativeBaseUrlPrefix()
+	{
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
+		$expected = '{"url":"http://localhost/PREFIX/filename.box"}';
+
+		$catalog = $this->constructCatalog();
+		$catalog->loadConfig();
+		// Before checkConfig() override the download-url-prefix to a relative
+		// directory called PREFIX.  checkConfig() should then make it absolute
+		// based on the current URL
+		$catalog->setConfig('download-url-prefix', 'PREFIX');
+		$catalog->checkConfig();
 
 		$result = $catalog->parseMetadataTemplate($template);
 
