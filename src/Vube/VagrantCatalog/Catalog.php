@@ -216,6 +216,7 @@ class Catalog {
 	{
 		return array(
 			$this->config['catalog-uri'] => self::ROUTE_CATALOG,
+			self::ROUTE_DEBUG => self::ROUTE_DEBUG,
 		);
 	}
 
