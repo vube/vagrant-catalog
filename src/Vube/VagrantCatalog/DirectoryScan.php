@@ -40,13 +40,10 @@ class DirectoryScan {
 			if(in_array($file, $this->ignoreList))
 				continue;
 
-			// If it's a directory, count it IFF it has a metadata.json
+			// If it's a directory, count it
 			$path = $dir.DIRECTORY_SEPARATOR.$file;
 			if(is_dir($path))
-			{
-				if(file_exists($path.DIRECTORY_SEPARATOR."metadata.json"))
-					$n++;
-			}
+				$n++;
 		}
 
 		closedir($dh);
