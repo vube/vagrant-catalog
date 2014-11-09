@@ -65,7 +65,8 @@ class Catalog {
 
 	public function initServerInfo()
 	{
-		$this->scriptRelativeDir = dirname($_SERVER['SCRIPT_NAME']);
+        // Windows dirname() replaces '/foo' with '\\foo', so we convert it back.
+		$this->scriptRelativeDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 
 		// In the docroot we don't want a leading slash.
 		// In sub-dirs there won't be a trailing slash, but the docroot
@@ -121,7 +122,7 @@ class Catalog {
 
 	public function computeConfigFilename()
 	{
-		$path = $this->baseDir . DIRECTORY_SEPARATOR . self::CONFIG_PHP;
+		$path = $this->baseDir . '/' . self::CONFIG_PHP;
 		return $path;
 	}
 

@@ -19,6 +19,9 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	public static function parseUrlIntoServerArgs($url, $basePath='')
 	{
+        if($basePath == '/')
+            $basePath = '';
+
 		$u = parse_url($url);
 
 		$defaultPort = ($u['scheme'] == 'https' ? 443 : 80);
