@@ -8,6 +8,7 @@ namespace Vube\VagrantCatalog;
 
 use Vube\VagrantCatalog\Exception\ConfigException;
 use Vube\VagrantCatalog\Exception\HttpException;
+use Vube\VagrantCatalog\Exception\InvalidInputException;
 
 
 /**
