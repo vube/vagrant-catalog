@@ -28,7 +28,7 @@ class DirectoryScan {
 		$this->ignoreList[] = $file;
 	}
 
-	public function countMetadataChildren($dir)
+	public function countMetadataChildren($dir, $depth=0)
 	{
 		$dh = opendir($dir);
 		if(! $dh)
@@ -44,9 +44,11 @@ class DirectoryScan {
 			// If it's a directory, count it
 			$path = $dir.'/'.$file;
 			if(is_dir($path))
-				$n += $this->countMetadataChildren($path);
+				$n += $this->countMetadataChildren($path, $depth+1);
 
-            else if($file == 'metadata.json')
+            // Only count metadata.json in SUB-directories of the original $dir,
+            // not in the $dir itself.
+            else if($file == 'metadata.json' && $depth > 0)
                 $n++;
 		}
 

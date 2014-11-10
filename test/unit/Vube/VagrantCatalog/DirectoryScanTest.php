@@ -40,8 +40,8 @@ class DirectoryScanTest extends \PHPUnit_Framework_TestCase
     {
         $tests = array(
             'docroot' => 2,
-            'docroot/non-empty' => 2,
-            'docroot/non-empty/non-empty' => 1,
+            'docroot/non-empty' => 1,
+            'docroot/non-empty/non-empty' => 0,
             'docroot/non-empty/non-empty/empty' => 0,
             'docroot/empty' => 0,
             'docroot/empty/empty' => 0,
@@ -69,8 +69,8 @@ class DirectoryScanTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('boxes', $result);
         $this->assertArrayHasKey('metadata', $result);
 
-        $this->assertSame(array('non-empty'), $result['dirs']);
-        $this->assertSame(array('non-empty'), $result['boxes']);
+        $this->assertSame(array('non-empty'), $result['dirs'], "Unexpected dirs result for $dir");
+        $this->assertSame(array('non-empty'), $result['boxes'], "Unexpected boxes result for $dir");
         $this->assertNull($result['metadata']);
     }
 
@@ -84,8 +84,8 @@ class DirectoryScanTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('boxes', $result);
         $this->assertArrayHasKey('metadata', $result);
 
-        $this->assertSame(array('non-empty'), $result['dirs']);
-        $this->assertSame(array('non-empty'), $result['boxes']);
+        $this->assertSame(array(), $result['dirs'], "Unexpected dirs result for $dir");
+        $this->assertSame(array('non-empty'), $result['boxes'], "Unexpected boxes result for $dir");
         $this->assertNotNull($result['metadata']);
     }
 
@@ -99,8 +99,8 @@ class DirectoryScanTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('boxes', $result);
         $this->assertArrayHasKey('metadata', $result);
 
-        $this->assertSame(array(), $result['dirs']);
-        $this->assertSame(array(), $result['boxes']);
+        $this->assertSame(array(), $result['dirs'], "Unexpected dirs result for $dir");
+        $this->assertSame(array(), $result['boxes'], "Unexpected boxes result for $dir");
         $this->assertNotNull($result['metadata']);
     }
 
@@ -114,8 +114,8 @@ class DirectoryScanTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('boxes', $result);
         $this->assertArrayHasKey('metadata', $result);
 
-        $this->assertSame(array(), $result['dirs']);
-        $this->assertSame(array(), $result['boxes']);
+        $this->assertSame(array(), $result['dirs'], "Unexpected dirs result for $dir");
+        $this->assertSame(array(), $result['boxes'], "Unexpected boxes result for $dir");
         $this->assertNull($result['metadata']);
     }
 }
