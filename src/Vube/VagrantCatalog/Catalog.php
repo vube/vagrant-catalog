@@ -8,6 +8,7 @@ namespace Vube\VagrantCatalog;
 
 use Vube\VagrantCatalog\Exception\ConfigException;
 use Vube\VagrantCatalog\Exception\HttpException;
+use Vube\VagrantCatalog\Exception\InvalidInputException;
 
 
 /**
@@ -64,7 +65,8 @@ class Catalog {
 
 	public function initServerInfo()
 	{
-		$this->scriptRelativeDir = dirname($_SERVER['SCRIPT_NAME']);
+        // Windows dirname() replaces '/foo' with '\\foo', so we convert it back.
+		$this->scriptRelativeDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 
 		// In the docroot we don't want a leading slash.
 		// In sub-dirs there won't be a trailing slash, but the docroot
@@ -120,7 +122,7 @@ class Catalog {
 
 	public function computeConfigFilename()
 	{
-		$path = $this->baseDir . DIRECTORY_SEPARATOR . self::CONFIG_PHP;
+		$path = $this->baseDir . '/' . self::CONFIG_PHP;
 		return $path;
 	}
 
@@ -256,8 +258,11 @@ class Catalog {
 	{
 		$parse = $template;
 
-		$parse = preg_replace("/\{\{download_url_prefix\}\}/", $this->config['download-url-prefix'], $parse);
-		$parse = preg_replace("/\{\{path_info\}\}/", $this->pathInfo, $parse);
+		$escapedDownloadUrlPrefix = str_replace('/', '\\/', $this->config['download-url-prefix']);
+		$escapedPathInfo = str_replace('/', '\\/', $this->pathInfo);
+
+		$parse = preg_replace("/\{\{\s*download_url_prefix\s*\}\}/", $escapedDownloadUrlPrefix, $parse);
+		$parse = preg_replace("/\{\{\s*path_info\s*\}\}/", $escapedPathInfo, $parse);
 
 		return $parse;
 	}
@@ -269,7 +274,7 @@ class Catalog {
 		$metadataFile = $this->config['metadata-root'] . $metadataPath;
 
 		if(! file_exists($metadataFile))
-			throw new HttpException("No such file: $metadataFile", 404);
+			throw new HttpException("No such file or directory: $metadataFile", 404);
 
 		$template = @file_get_contents($metadataFile);
 		$metadata = $this->parseMetadataTemplate($template);
@@ -283,6 +288,28 @@ class Catalog {
 		return $result;
 	}
 
+    public function computeRelativePathInfo($pathInfo)
+    {
+        // pathInfo with no leading slash (possibly empty string)
+        $relativePathInfo = preg_replace('%^/+%', '', $pathInfo);
+        return $relativePathInfo;
+    }
+
+    public function computeBreadcrumb($relativePathInfo)
+    {
+        $relativePathParts = array();
+        if($relativePathInfo != '')
+            $relativePathParts = explode('/', $relativePathInfo);
+        $backDirs = array();
+        for($i=0; $i<count($relativePathParts); $i++)
+        {
+            $slice = array_slice($relativePathParts, 0, $i+1);
+            $backdir = implode('/', $slice);
+            $backDirs[$backdir] = $relativePathParts[$i];
+        }
+        return $backDirs;
+    }
+
 	public function execIndexRoute()
 	{
 		$currentDir = $this->config['metadata-root'] . $this->pathInfo;
@@ -293,14 +320,30 @@ class Catalog {
 		$smarty->assign('CATALOG_URI', $this->baseUri.'/'.$this->config['catalog-uri']);
 
 		$smarty->assign('pathInfo', $this->pathInfo);
-		// pathInfo with no leading slash (possibly empty string)
-		$smarty->assign('relativePathInfo', preg_replace('%^/+%', '', $this->pathInfo));
+
+        $relativePathInfo = $this->computeRelativePathInfo($this->pathInfo);
+		$smarty->assign('relativePathInfo', $relativePathInfo);
+
+        $backDirs = $this->computeBreadcrumb($relativePathInfo);
+        $smarty->assign('relativeBackDirs', $backDirs);
 
 		$scanner = new DirectoryScan($currentDir);
 		$dirInfo = $scanner->scan();
+        // If there is a metadata.json in this directory, read it in
+        $metadata = null;
+        $json = null;
+        if ($dirInfo['metadata'] !== null)
+        {
+            $template = @file_get_contents($dirInfo['metadata']);
+            $metadata = $this->parseMetadataTemplate($template);
+
+            $json = json_decode($metadata, true);
+        }
 
 		$smarty->assign('directories', $dirInfo['dirs']);
 		$smarty->assign('boxes', $dirInfo['boxes']);
+        $smarty->assign('metadata', $metadata);
+        $smarty->assign('json', $json);
 
 		$result = array(
 			'headers' => array(

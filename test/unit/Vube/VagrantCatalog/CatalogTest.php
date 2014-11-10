@@ -19,6 +19,9 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	public static function parseUrlIntoServerArgs($url, $basePath='')
 	{
+        if($basePath == '/')
+            $basePath = '';
+
 		$u = parse_url($url);
 
 		$defaultPort = ($u['scheme'] == 'https' ? 443 : 80);
@@ -158,8 +161,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	public function testTemplateParseDocroot()
 	{
-		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
-		$expected = '{"url":"http://download.dev/files/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}\/filename.box"}';
+		$expected = '{"url":"http:\/\/download.dev\/files\/filename.box"}';
 
 		$catalog = $this->constructCatalog();
 		$catalog->loadConfig();
@@ -170,10 +173,24 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		$this->assertSame($expected, $result);
 	}
 
-	public function testTemplateParseDocrootWithRelativeBaseUrlPrefix()
+    public function testTemplateParseWithWhitespace()
+    {
+        $template = '{"url":"{{    download_url_prefix    }}{{    path_info   }}\/filename.box"}';
+        $expected = '{"url":"http:\/\/download.dev\/files\/filename.box"}';
+
+        $catalog = $this->constructCatalog();
+        $catalog->loadConfig();
+        $catalog->checkConfig();
+
+        $result = $catalog->parseMetadataTemplate($template);
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function testTemplateParseDocrootWithRelativeBaseUrlPrefix()
 	{
-		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
-		$expected = '{"url":"http://localhost/PREFIX/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}\/filename.box"}';
+		$expected = '{"url":"http:\/\/localhost\/PREFIX\/filename.box"}';
 
 		$catalog = $this->constructCatalog();
 		$catalog->loadConfig();
@@ -190,8 +207,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	public function testTemplateParseSubdirPathInfo()
 	{
-		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
-		$expected = '{"url":"http://download.dev/files/foo/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}\/filename.box"}';
+		$expected = '{"url":"http:\/\/download.dev\/files\/foo\/filename.box"}';
 
 		$catalog = $this->constructCatalog("http://localhost/base/foo", "/base");
 		$catalog->init();
@@ -211,6 +228,16 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame($expected, $result['content']);
 	}
+
+    public function testExecNoSuchDirectory()
+    {
+        $catalog = $this->constructCatalog("http://localhost/catalog/no/such/directory");
+        $catalog->init();
+
+        // Expect this to give a HTTP 404 exception
+        $this->setExpectedException('\\Vube\\VagrantCatalog\\Exception\\HttpException', '', 404);
+        $unused = $catalog->exec();
+    }
 
 	public function testExecDocrootPathInfo()
 	{
@@ -245,5 +272,56 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame($expected, $result['content']);
 	}
+
+    public function testComputeRelativePathInfoEmpty()
+    {
+        $tests = array(
+            //    path_info   expected_result
+            array('',         ''),
+            array('/',        ''),
+            array('/foo',     'foo'),
+            array('/foo/bar', 'foo/bar'),
+        );
+
+        $catalog = $this->constructCatalog("http://localhost/base/catalog/foo", "/base");
+        $catalog->init();
+
+        foreach ($tests as $test)
+        {
+            $pathInfo = $test[0];
+            $expected = $test[1];
+
+            $actual = $catalog->computeRelativePathInfo($pathInfo);
+            $this->assertSame($expected, $actual, "Path Info '$pathInfo' should return '$expected'");
+        }
+    }
+
+    public function testComputeBreadcrumb()
+    {
+        $tests = array(
+            array('', array()),
+            array('foo', array(
+                'foo' => 'foo'
+            )),
+            array('foo/bar', array(
+                'foo' => 'foo',
+                'foo/bar' => 'bar',
+            )),
+        );
+
+        $catalog = $this->constructCatalog("http://localhost/base/catalog/foo", "/base");
+        $catalog->init();
+
+        foreach ($tests as $test)
+        {
+            $relativePathInfo = $test[0];
+            $expected = $test[1];
+            $actual = $catalog->computeBreadcrumb($relativePathInfo);
+
+            $this->assertEquals($expected, $actual, "Relative Path Info '$relativePathInfo' should return '".
+                var_export($expected,true)."'");
+        }
+    }
+
 }
  

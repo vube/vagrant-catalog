@@ -4,6 +4,7 @@
  */
 
 namespace Vube\VagrantCatalog;
+use Vube\VagrantCatalog\Exception\HttpException;
 
 
 /**
@@ -27,7 +28,7 @@ class DirectoryScan {
 		$this->ignoreList[] = $file;
 	}
 
-	public function countSubDirectories($dir)
+	public function countMetadataChildren($dir, $depth=0)
 	{
 		$dh = opendir($dir);
 		if(! $dh)
@@ -41,9 +42,14 @@ class DirectoryScan {
 				continue;
 
 			// If it's a directory, count it
-			$path = $dir.DIRECTORY_SEPARATOR.$file;
+			$path = $dir.'/'.$file;
 			if(is_dir($path))
-				$n++;
+				$n += $this->countMetadataChildren($path, $depth+1);
+
+            // Only count metadata.json in SUB-directories of the original $dir,
+            // not in the $dir itself.
+            else if($file == 'metadata.json' && $depth > 0)
+                $n++;
 		}
 
 		closedir($dh);
@@ -52,6 +58,9 @@ class DirectoryScan {
 
 	public function scan()
 	{
+        if(! file_exists($this->dir))
+            throw new HttpException("No such file or directory: ".$this->dir, 404);
+
 		$dh = opendir($this->dir);
 		if(! $dh)
 			throw new Exception("Cannot read directory: ".$this->dir);
@@ -59,6 +68,7 @@ class DirectoryScan {
 		$result = array(
 			'dirs' => array(),
 			'boxes' => array(),
+            'metadata' => null,
 		);
 
 		while($file = readdir($dh))
@@ -67,22 +77,30 @@ class DirectoryScan {
 			if(in_array($file, $this->ignoreList))
 				continue;
 
-			$path = $this->dir . DIRECTORY_SEPARATOR . $file;
+			$path = $this->dir . '/' . $file;
 
 			if(is_dir($path))
 			{
 				// If there is a metadata.json in this dir, it is a box
-				if(file_exists($path . DIRECTORY_SEPARATOR . 'metadata.json'))
+				if(file_exists($path . '/' . 'metadata.json'))
 					$result['boxes'][] = $file;
 
 				// Only list this as a directory IFF there are more
 				// directories under it.
-				if($this->countSubDirectories($path) > 0)
+				if($this->countMetadataChildren($path) > 0)
 					$result['dirs'][] = $file;
 			}
+            else if($file == 'metadata.json')
+            {
+                $result['metadata'] = $path;
+            }
 		}
 
 		closedir($dh);
+
+        sort($result['dirs']);
+        sort($result['boxes']);
+
 		return $result;
 	}
 }
