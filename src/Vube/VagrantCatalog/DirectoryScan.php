@@ -63,6 +63,7 @@ class DirectoryScan {
 		$result = array(
 			'dirs' => array(),
 			'boxes' => array(),
+            'metadata' => null,
 		);
 
 		while($file = readdir($dh))
@@ -84,9 +85,17 @@ class DirectoryScan {
 				if($this->countSubDirectories($path) > 0)
 					$result['dirs'][] = $file;
 			}
+            else if($file == 'metadata.json')
+            {
+                $result['metadata'] = $path;
+            }
 		}
 
 		closedir($dh);
+
+        sort($result['dirs']);
+        sort($result['boxes']);
+
 		return $result;
 	}
 }

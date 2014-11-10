@@ -173,7 +173,21 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		$this->assertSame($expected, $result);
 	}
 
-	public function testTemplateParseDocrootWithRelativeBaseUrlPrefix()
+    public function testTemplateParseWithWhitespace()
+    {
+        $template = '{"url":"{{    download_url_prefix    }}{{    path_info   }}/filename.box"}';
+        $expected = '{"url":"http://download.dev/files/filename.box"}';
+
+        $catalog = $this->constructCatalog();
+        $catalog->loadConfig();
+        $catalog->checkConfig();
+
+        $result = $catalog->parseMetadataTemplate($template);
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function testTemplateParseDocrootWithRelativeBaseUrlPrefix()
 	{
 		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
 		$expected = '{"url":"http://localhost/PREFIX/filename.box"}';

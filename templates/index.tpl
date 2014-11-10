@@ -10,7 +10,7 @@
 <h3>Boxes</h3>
 <ul>
 {foreach $boxes as $file}
-    <li>{$relativePathInfo|escape}{if $relativePathInfo ne ''}/{/if}{$file|escape} -- <a href="{$CATALOG_URI|escape}{$pathInfo|escape}/{$file|escape}">{$CATALOG_URI|escape}{$pathInfo|escape}/{$file|escape}</a></li>
+    <li><a href="{$BASE_URI|escape}{$pathInfo|escape}/{$file|escape}">{$relativePathInfo|escape}{if $relativePathInfo ne ''}/{/if}{$file|escape}</a></li>
 {/foreach}
 {/if}
 </ul>
@@ -23,6 +23,13 @@
 {/foreach}
 </ul>
 {/if}
+
+{if $metadata !== null}
+<h3><a href="{$CATALOG_URI|escape}{$pathInfo|escape}">{$CATALOG_URI|escape}{$pathInfo|escape}</a></h3>
+<pre>{$metadata|escape}</pre>
+{/if}
+
+<p><em>Powered by <a href="https://github.com/vube/vagrant-catalog">vagrant-catalog</a></em></p>
 
 </body>
 </html>

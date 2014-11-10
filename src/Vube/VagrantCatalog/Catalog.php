@@ -258,8 +258,11 @@ class Catalog {
 	{
 		$parse = $template;
 
-		$parse = preg_replace("/\{\{download_url_prefix\}\}/", $this->config['download-url-prefix'], $parse);
-		$parse = preg_replace("/\{\{path_info\}\}/", $this->pathInfo, $parse);
+		$escapedDownloadUrlPrefix = str_replace('/', '\\/', $this->config['download-url-prefix']);
+		$escapedPathInfo = str_replace('/', '\\/', $this->pathInfo);
+
+		$parse = preg_replace("/\{\{\s*download_url_prefix\s*\}\}/", $escapedDownloadUrlPrefix, $parse);
+		$parse = preg_replace("/\{\{\s*path_info\s*\}\}/", $escapedPathInfo, $parse);
 
 		return $parse;
 	}
@@ -300,9 +303,17 @@ class Catalog {
 
 		$scanner = new DirectoryScan($currentDir);
 		$dirInfo = $scanner->scan();
+        // If there is a metadata.json in this directory, read it in
+        $metadata = null;
+        if ($dirInfo['metadata'] !== null)
+        {
+            $template = @file_get_contents($dirInfo['metadata']);
+            $metadata =$this->parseMetadataTemplate($template);
+        }
 
 		$smarty->assign('directories', $dirInfo['dirs']);
 		$smarty->assign('boxes', $dirInfo['boxes']);
+        $smarty->assign('metadata', $metadata);
 
 		$result = array(
 			'headers' => array(
