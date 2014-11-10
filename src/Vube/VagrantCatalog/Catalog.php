@@ -331,15 +331,19 @@ class Catalog {
 		$dirInfo = $scanner->scan();
         // If there is a metadata.json in this directory, read it in
         $metadata = null;
+        $json = null;
         if ($dirInfo['metadata'] !== null)
         {
             $template = @file_get_contents($dirInfo['metadata']);
-            $metadata =$this->parseMetadataTemplate($template);
+            $metadata = $this->parseMetadataTemplate($template);
+
+            $json = json_decode($metadata, true);
         }
 
 		$smarty->assign('directories', $dirInfo['dirs']);
 		$smarty->assign('boxes', $dirInfo['boxes']);
         $smarty->assign('metadata', $metadata);
+        $smarty->assign('json', $json);
 
 		$result = array(
 			'headers' => array(

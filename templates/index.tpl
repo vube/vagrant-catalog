@@ -51,8 +51,31 @@ Vagrant.configure(2) do |config|
 end
 </pre></p>
 
-<h3>Metadata</h3>
-<pre>{$metadata|escape}</pre>
+<h2>Version {$json['versions'][0]['version']|escape}</h2>
+<p>
+    {foreach $json['versions'][0]['providers'] as $provider}
+        <a href="{$provider['url']|escape}">{$provider['name']|escape}</a>
+        {$provider['checksum_type']|escape}={$provider['checksum']|escape}
+        <br/>
+    {/foreach}
+</p>
+
+{if $json['versions']|@count gt 1}
+<h3>Older Versions</h3>
+{foreach $json['versions'] as $version}
+{if ! $version@first}{* do not print the first version, we've printed it above *}
+    <h4>Version {$version['version']|escape}</h4>
+    <p>
+        {foreach $version['providers'] as $provider}
+            <a href="{$provider['url']|escape}">{$provider['name']|escape}</a>
+            {$provider['checksum_type']|escape}={$provider['checksum']|escape}
+            <br/>
+        {/foreach}
+    </p>
+{/if}{* end if not the first version *}
+{/foreach}
+{/if}{* end if more than 1 json version *}
+
 {/if}
 
 <p><em>Powered by <a href="https://github.com/vube/vagrant-catalog">vagrant-catalog</a></em></p>
