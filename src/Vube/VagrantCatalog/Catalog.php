@@ -271,7 +271,7 @@ class Catalog {
 		$metadataFile = $this->config['metadata-root'] . $metadataPath;
 
 		if(! file_exists($metadataFile))
-			throw new HttpException("No such file: $metadataFile", 404);
+			throw new HttpException("No such file or directory: $metadataFile", 404);
 
 		$template = @file_get_contents($metadataFile);
 		$metadata = $this->parseMetadataTemplate($template);

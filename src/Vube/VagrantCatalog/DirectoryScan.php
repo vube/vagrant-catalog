@@ -4,6 +4,7 @@
  */
 
 namespace Vube\VagrantCatalog;
+use Vube\VagrantCatalog\Exception\HttpException;
 
 
 /**
@@ -52,6 +53,9 @@ class DirectoryScan {
 
 	public function scan()
 	{
+        if(! file_exists($this->dir))
+            throw new HttpException("No such file or directory: ".$this->dir, 404);
+
 		$dh = opendir($this->dir);
 		if(! $dh)
 			throw new Exception("Cannot read directory: ".$this->dir);

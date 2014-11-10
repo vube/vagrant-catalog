@@ -215,6 +215,16 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 		$this->assertSame($expected, $result['content']);
 	}
 
+    public function testExecNoSuchDirectory()
+    {
+        $catalog = $this->constructCatalog("http://localhost/catalog/no/such/directory");
+        $catalog->init();
+
+        // Expect this to give a HTTP 404 exception
+        $this->setExpectedException('\\Vube\\VagrantCatalog\\Exception\\HttpException', '', 404);
+        $unused = $catalog->exec();
+    }
+
 	public function testExecDocrootPathInfo()
 	{
 		$pathinfo = "/foo";
