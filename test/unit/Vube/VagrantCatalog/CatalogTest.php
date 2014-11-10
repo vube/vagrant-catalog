@@ -161,8 +161,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	public function testTemplateParseDocroot()
 	{
-		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
-		$expected = '{"url":"http://download.dev/files/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}\/filename.box"}';
+		$expected = '{"url":"http:\/\/download.dev\/files\/filename.box"}';
 
 		$catalog = $this->constructCatalog();
 		$catalog->loadConfig();
@@ -175,8 +175,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
     public function testTemplateParseWithWhitespace()
     {
-        $template = '{"url":"{{    download_url_prefix    }}{{    path_info   }}/filename.box"}';
-        $expected = '{"url":"http://download.dev/files/filename.box"}';
+        $template = '{"url":"{{    download_url_prefix    }}{{    path_info   }}\/filename.box"}';
+        $expected = '{"url":"http:\/\/download.dev\/files\/filename.box"}';
 
         $catalog = $this->constructCatalog();
         $catalog->loadConfig();
@@ -189,8 +189,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
     public function testTemplateParseDocrootWithRelativeBaseUrlPrefix()
 	{
-		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
-		$expected = '{"url":"http://localhost/PREFIX/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}\/filename.box"}';
+		$expected = '{"url":"http:\/\/localhost\/PREFIX\/filename.box"}';
 
 		$catalog = $this->constructCatalog();
 		$catalog->loadConfig();
@@ -207,8 +207,8 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 	public function testTemplateParseSubdirPathInfo()
 	{
-		$template = '{"url":"{{download_url_prefix}}{{path_info}}/filename.box"}';
-		$expected = '{"url":"http://download.dev/files/foo/filename.box"}';
+		$template = '{"url":"{{download_url_prefix}}{{path_info}}\/filename.box"}';
+		$expected = '{"url":"http:\/\/download.dev\/files\/foo\/filename.box"}';
 
 		$catalog = $this->constructCatalog("http://localhost/base/foo", "/base");
 		$catalog->init();
