@@ -28,7 +28,7 @@ class DirectoryScan {
 		$this->ignoreList[] = $file;
 	}
 
-	public function countSubDirectories($dir)
+	public function countMetadataChildren($dir)
 	{
 		$dh = opendir($dir);
 		if(! $dh)
@@ -42,9 +42,12 @@ class DirectoryScan {
 				continue;
 
 			// If it's a directory, count it
-			$path = $dir.DIRECTORY_SEPARATOR.$file;
+			$path = $dir.'/'.$file;
 			if(is_dir($path))
-				$n++;
+				$n += $this->countMetadataChildren($path);
+
+            else if($file == 'metadata.json')
+                $n++;
 		}
 
 		closedir($dh);
@@ -72,17 +75,17 @@ class DirectoryScan {
 			if(in_array($file, $this->ignoreList))
 				continue;
 
-			$path = $this->dir . DIRECTORY_SEPARATOR . $file;
+			$path = $this->dir . '/' . $file;
 
 			if(is_dir($path))
 			{
 				// If there is a metadata.json in this dir, it is a box
-				if(file_exists($path . DIRECTORY_SEPARATOR . 'metadata.json'))
+				if(file_exists($path . '/' . 'metadata.json'))
 					$result['boxes'][] = $file;
 
 				// Only list this as a directory IFF there are more
 				// directories under it.
-				if($this->countSubDirectories($path) > 0)
+				if($this->countMetadataChildren($path) > 0)
 					$result['dirs'][] = $file;
 			}
             else if($file == 'metadata.json')
