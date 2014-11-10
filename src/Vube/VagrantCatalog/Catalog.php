@@ -288,6 +288,28 @@ class Catalog {
 		return $result;
 	}
 
+    public function computeRelativePathInfo($pathInfo)
+    {
+        // pathInfo with no leading slash (possibly empty string)
+        $relativePathInfo = preg_replace('%^/+%', '', $pathInfo);
+        return $relativePathInfo;
+    }
+
+    public function computeBreadcrumb($relativePathInfo)
+    {
+        $relativePathParts = array();
+        if($relativePathInfo != '')
+            $relativePathParts = explode('/', $relativePathInfo);
+        $backDirs = array();
+        for($i=0; $i<count($relativePathParts); $i++)
+        {
+            $slice = array_slice($relativePathParts, 0, $i+1);
+            $backdir = implode('/', $slice);
+            $backDirs[$backdir] = $relativePathParts[$i];
+        }
+        return $backDirs;
+    }
+
 	public function execIndexRoute()
 	{
 		$currentDir = $this->config['metadata-root'] . $this->pathInfo;
@@ -298,8 +320,12 @@ class Catalog {
 		$smarty->assign('CATALOG_URI', $this->baseUri.'/'.$this->config['catalog-uri']);
 
 		$smarty->assign('pathInfo', $this->pathInfo);
-		// pathInfo with no leading slash (possibly empty string)
-		$smarty->assign('relativePathInfo', preg_replace('%^/+%', '', $this->pathInfo));
+
+        $relativePathInfo = $this->computeRelativePathInfo($this->pathInfo);
+		$smarty->assign('relativePathInfo', $relativePathInfo);
+
+        $backDirs = $this->computeBreadcrumb($relativePathInfo);
+        $smarty->assign('relativeBackDirs', $backDirs);
 
 		$scanner = new DirectoryScan($currentDir);
 		$dirInfo = $scanner->scan();

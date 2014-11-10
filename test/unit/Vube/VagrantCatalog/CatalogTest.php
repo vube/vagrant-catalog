@@ -272,5 +272,56 @@ class CatalogTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame($expected, $result['content']);
 	}
+
+    public function testComputeRelativePathInfoEmpty()
+    {
+        $tests = array(
+            //    path_info   expected_result
+            array('',         ''),
+            array('/',        ''),
+            array('/foo',     'foo'),
+            array('/foo/bar', 'foo/bar'),
+        );
+
+        $catalog = $this->constructCatalog("http://localhost/base/catalog/foo", "/base");
+        $catalog->init();
+
+        foreach ($tests as $test)
+        {
+            $pathInfo = $test[0];
+            $expected = $test[1];
+
+            $actual = $catalog->computeRelativePathInfo($pathInfo);
+            $this->assertSame($expected, $actual, "Path Info '$pathInfo' should return '$expected'");
+        }
+    }
+
+    public function testComputeBreadcrumb()
+    {
+        $tests = array(
+            array('', array()),
+            array('foo', array(
+                'foo' => 'foo'
+            )),
+            array('foo/bar', array(
+                'foo' => 'foo',
+                'foo/bar' => 'bar',
+            )),
+        );
+
+        $catalog = $this->constructCatalog("http://localhost/base/catalog/foo", "/base");
+        $catalog->init();
+
+        foreach ($tests as $test)
+        {
+            $relativePathInfo = $test[0];
+            $expected = $test[1];
+            $actual = $catalog->computeBreadcrumb($relativePathInfo);
+
+            $this->assertEquals($expected, $actual, "Relative Path Info '$relativePathInfo' should return '".
+                var_export($expected,true)."'");
+        }
+    }
+
 }
  
