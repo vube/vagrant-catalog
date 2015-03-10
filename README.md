@@ -16,6 +16,8 @@ vagrant-catalog is a simple HTTP interface to your collection of Vagrant boxes t
 you've created and returns metadata to Vagrant so you can use commants like `vagrant box outdated`,
 `vagrant box update`, etc, on your own boxes.
 
+A complete example can be found here: [vagrant-boxer-example](https://github.com/xclusv/vagrant-boxer-example)
+
 
 Features
 --------
